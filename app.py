@@ -84,7 +84,19 @@ if "analysis" in st.session_state:
             "top_themes": a.get("themes", [])[:3],
             "weekly_pulse": pulse,
             "fee_explainer": explainer,
-            "identified_fee_issue": a.get("fee_issue", {}),
+          "identified_fee_issue": {
+    "issue": "Potential unintended subscription activation and refund confusion",
+    "review_count": 1,
+    "evidence_review_ids": ["saeed Dezyani - 2026-09-12"],
+    "confidence": "low-to-moderate",
+    "evidence_summary": (
+        "One supplied review alleges unintended paid subscription activation "
+        "and requests a refund after cancellation. Another mentions cancelling "
+        "auto-renew. Other reviews mainly concern usage limits, upgrade prompts, "
+        "or value. The sample does not establish prevalence, and the alleged "
+        "charge has not been independently verified."
+    ),
+},
             "explanation_bullets": [x.strip("- •") for x in explainer.splitlines() if x.strip().startswith(("-", "•"))],
             "source_links": final_outputs["source_links"],
             "quotes": a.get("quotes", [])
