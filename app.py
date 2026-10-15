@@ -175,3 +175,65 @@ if st.button("Run Evaluation", type="primary"):
         except subprocess.TimeoutExpired:
             st.error("Evaluation took longer than 60 seconds.")
 
+
+st.divider()
+st.subheader("Evidence Grounding Evaluation")
+
+st.write(
+    "Checks whether selected product-pulse claims are supported "
+    "by their supplied evidence. This is a rule-based baseline, "
+    "not a full AI hallucination detector."
+)
+
+if st.button("Run Grounding Evaluation"):
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    script_path = Path(__file__).parent / "evals" / "run_grounding_evals.py"
+
+    result = subprocess.run(
+        [sys.executable, str(script_path)],
+        capture_output=True,
+        text=True,
+        cwd=str(Path(__file__).parent)
+    )
+
+    if result.returncode == 0:
+        st.success("Grounding evaluation completed.")
+        st.code(result.stdout)
+
+        summary_path = (
+            Path(__file__).parent
+            / "evals"
+            / "reports"
+            / "grounding_evaluation_summary.json"
+        )
+
+        cases_path = (
+            Path(__file__).parent
+            / "evals"
+            / "reports"
+            / "grounding_evaluation_cases.csv"
+        )
+
+        if summary_path.exists():
+            st.download_button(
+                "Download Grounding Summary (JSON)",
+                data=summary_path.read_bytes(),
+                file_name="grounding_evaluation_summary.json",
+                mime="application/json"
+            )
+
+        if cases_path.exists():
+            st.download_button(
+                "Download Grounding Cases (CSV)",
+                data=cases_path.read_bytes(),
+                file_name="grounding_evaluation_cases.csv",
+                mime="text/csv"
+            )
+    else:
+        st.error("Grounding evaluation failed.")
+        st.code(result.stderr or result.stdout)
+
+
