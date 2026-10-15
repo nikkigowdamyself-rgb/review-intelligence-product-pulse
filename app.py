@@ -79,7 +79,7 @@ if "analysis" in st.session_state:
             "fee_explainer": explainer,
             "source_links": [x.strip() for x in sources.splitlines() if x.strip()]
         }
-        record = {
+        record = {"weekly_pulse": pulse,
             "date": str(date.today()),
             "top_themes": a.get("themes", [])[:3],
             "weekly_pulse": pulse,
