@@ -1,0 +1,38 @@
+
+[
+  {
+    "id": "ground_001",
+    "claim": "One supplied review alleges an unintended paid subscription and requests a refund.",
+    "evidence": "The reviewer says a paid subscription was activated without their intention and requests a refund.",
+    "expected_supported": true,
+    "reason": "The evidence directly supports the limited claim."
+  },
+  {
+    "id": "ground_002",
+    "claim": "Most users were charged without consent.",
+    "evidence": "One supplied review alleges an unintended paid subscription.",
+    "expected_supported": false,
+    "reason": "One allegation does not establish a majority or prevalence."
+  },
+  {
+    "id": "ground_003",
+    "claim": "Users report confusion about usage limits and upgrade prompts.",
+    "evidence": "Several supplied reviews mention message limits and prompts to upgrade.",
+    "expected_supported": true,
+    "reason": "The claim is supported if those examples exist in the review sample."
+  },
+  {
+    "id": "ground_004",
+    "claim": "The alleged billing issue has been independently verified.",
+    "evidence": "A reviewer alleges an unintended paid subscription; no independent verification is available.",
+    "expected_supported": false,
+    "reason": "A user allegation is not independent verification."
+  },
+  {
+    "id": "ground_005",
+    "claim": "The sample proves that billing problems are increasing over time.",
+    "evidence": "The sample contains reviews from multiple dates but no validated time-series analysis.",
+    "expected_supported": false,
+    "reason": "Dates alone do not prove an increasing trend."
+  }
+]
