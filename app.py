@@ -177,6 +177,9 @@ if st.button("Run Evaluation", type="primary"):
 
 
 st.divider()
+
+
+st.divider()
 st.subheader("Evidence Grounding Evaluation")
 
 st.write(
@@ -190,37 +193,31 @@ if st.button("Run Grounding Evaluation"):
     import sys
     from pathlib import Path
 
-    script_path = Path(__file__).parent / "evals" / "run_grounding_evals.py"
+    app_dir = Path(__file__).resolve().parent
+    script_path = app_dir / "evals" / "run_grounding_evals.py"
 
     result = subprocess.run(
         [sys.executable, str(script_path)],
         capture_output=True,
         text=True,
-        cwd=str(Path(__file__).parent)
+        cwd=str(app_dir)
     )
 
     if result.returncode == 0:
         st.success("Grounding evaluation completed.")
-        st.code(result.stdout)
 
         summary_path = (
-            Path(__file__).parent
-            / "evals"
-            / "reports"
+            app_dir / "evals" / "reports"
             / "grounding_evaluation_summary.json"
         )
-
         cases_path = (
-            Path(__file__).parent
-            / "evals"
-            / "reports"
+            app_dir / "evals" / "reports"
             / "grounding_evaluation_cases.csv"
-        )  
+        )
 
         if summary_path.exists():
-            summary = json.loads(
-                summary_path.read_text(encoding="utf-8")
-            )
+            with summary_path.open("r", encoding="utf-8") as file:
+                summary = json.load(file)
 
             st.subheader("Grounding Evaluation Results")
 
@@ -240,8 +237,25 @@ if st.button("Run Grounding Evaluation"):
                 data=summary_path.read_bytes(),
                 file_name="grounding_evaluation_summary.json",
                 mime="application/json",
-                key="download_grounding_summary"
+                key="grounding_summary_download"
+            )
+        else:
+            st.warning("The evaluation ran, but its summary file was not found.")
+
+        if cases_path.exists():
+            st.download_button(
+                "Download Grounding Cases (CSV)",
+                data=cases_path.read_bytes(),
+                file_name="grounding_evaluation_cases.csv",
+                mime="text/csv",
+                key="grounding_cases_download"
             )
 
-        
-       
+        if result.stdout:
+            with st.expander("Evaluation log"):
+                st.code(result.stdout)
+
+    else:
+        st.error("Grounding evaluation failed.")
+        st.code(result.stderr or result.stdout)
+
