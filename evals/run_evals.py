@@ -19,11 +19,155 @@ FEE_KEYWORDS = [
     "refund after cancellation",
 ]
 
+
 def predict_fee_issue(text):
+    text = text.lower()
+
+    # A charge after cancellation is a strong fee-related signal.
+    if (
+        "cancel" in text
+        and any(word in text for word in [
+            "billed", "charged", "payment taken"
+        ])
+    ):
+        return True
+
+    # Explicit claims of an unintended charge or activation.
+    if any(phrase in text for phrase in [
+        "without my intent",
+        "charged unexpectedly",
+        "unintended paid subscription",
+        "activated without my consent",
+        "refund after cancellation"
+    ]):
+        return True
+
+    # Trial questions, upgrade prompts and refund intent alone
+    # do not prove an unexpected charge.
+    return False
+
+
+def predict_theme(text):
+    text = text.lower()
+
+    # Prioritize the underlying complaint over refund language.
+    if any(phrase in text for phrase in [
+        "answers are wrong",
+        "inaccurate",
+        "wrong answer",
+        "ignores instructions",
+        "ignores simple instructions"
+    ]):
+        return "Answer quality / accuracy"
+
+    if any(phrase in text for phrase in [
+        "cannot find",
+        "can't find",
+        "settings menu",
+        "navigation"
+    ]):
+        return "Usability / navigation"
+
+    if any(phrase in text for phrase in [
+        "free plan",
+        "messages quickly",
+        "upgrade to continue",
+        "hit a limit",
+        "message limit",
+        "usage limit"
+    ]):
+        return "Usage limits / upgrade prompts"
+
+    if any(phrase in text for phrase in [
+        "subscription",
+        "refund",
+        "charged",
+        "billed",
+        "auto-renew",
+        "free trial",
+        "paying",
+        "cancelled"
+    ]):
+        return "Subscription / billing confusion"
+
+    return "Other / unclassified"
+
     text = text.lower()
     return any(keyword in text for keyword in FEE_KEYWORDS)
 
+
+def predict_fee_issue(text):
+    text = text.lower()
+
+    # A charge after cancellation is a strong fee-related signal.
+    if (
+        "cancel" in text
+        and any(word in text for word in [
+            "billed", "charged", "payment taken"
+        ])
+    ):
+        return True
+
+    # Explicit claims of an unintended charge or activation.
+    if any(phrase in text for phrase in [
+        "without my intent",
+        "charged unexpectedly",
+        "unintended paid subscription",
+        "activated without my consent",
+        "refund after cancellation"
+    ]):
+        return True
+
+    # Trial questions, upgrade prompts and refund intent alone
+    # do not prove an unexpected charge.
+    return False
+
+
 def predict_theme(text):
+    text = text.lower()
+
+    # Prioritize the underlying complaint over refund language.
+    if any(phrase in text for phrase in [
+        "answers are wrong",
+        "inaccurate",
+        "wrong answer",
+        "ignores instructions",
+        "ignores simple instructions"
+    ]):
+        return "Answer quality / accuracy"
+
+    if any(phrase in text for phrase in [
+        "cannot find",
+        "can't find",
+        "settings menu",
+        "navigation"
+    ]):
+        return "Usability / navigation"
+
+    if any(phrase in text for phrase in [
+        "free plan",
+        "messages quickly",
+        "upgrade to continue",
+        "hit a limit",
+        "message limit",
+        "usage limit"
+    ]):
+        return "Usage limits / upgrade prompts"
+
+    if any(phrase in text for phrase in [
+        "subscription",
+        "refund",
+        "charged",
+        "billed",
+        "auto-renew",
+        "free trial",
+        "paying",
+        "cancelled"
+    ]):
+        return "Subscription / billing confusion"
+
+    return "Other / unclassified"
+
     text = text.lower()
 
     if any(w in text for w in [
