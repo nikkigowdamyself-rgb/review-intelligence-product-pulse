@@ -118,3 +118,60 @@ else:
     sample = Path("data/sample_reviews_synthetic.csv")
     if sample.exists():
         st.download_button("Download synthetic demo CSV", sample.read_bytes(), file_name="sample_reviews_synthetic.csv", mime="text/csv")
+
+
+# ---------------- AI Review Evaluation ----------------
+import subprocess
+import sys
+
+st.divider()
+st.header("AI Review Evaluation")
+st.write(
+    "Run the baseline evaluation on the labelled test dataset. "
+    "This does not call the MCP tools."
+)
+
+if st.button("Run Evaluation", type="primary"):
+    with st.spinner("Running evaluation..."):
+        try:
+            result = subprocess.run(
+                [sys.executable, "evals/run_evals.py"],
+                capture_output=True,
+                text=True,
+                timeout=60,
+                cwd=Path(__file__).resolve().parent,
+            )
+
+            if result.returncode == 0:
+                st.success("Evaluation completed.")
+                st.code(result.stdout)
+
+                summary_path = Path(
+                    "evals/reports/evaluation_summary.json"
+                )
+                cases_path = Path(
+                    "evals/reports/evaluation_cases.csv"
+                )
+
+                if summary_path.exists():
+                    st.download_button(
+                        "Download evaluation summary (JSON)",
+                        summary_path.read_bytes(),
+                        file_name="evaluation_summary.json",
+                        mime="application/json",
+                    )
+
+                if cases_path.exists():
+                    st.download_button(
+                        "Download individual test results (CSV)",
+                        cases_path.read_bytes(),
+                        file_name="evaluation_cases.csv",
+                        mime="text/csv",
+                    )
+            else:
+                st.error("Evaluation failed. See the error below.")
+                st.code(result.stderr or result.stdout)
+
+        except subprocess.TimeoutExpired:
+            st.error("Evaluation took longer than 60 seconds.")
+
