@@ -217,8 +217,34 @@ if st.button("Run Grounding Evaluation"):
             / "grounding_evaluation_cases.csv"
         )
 
-        if summary_path.exists():
-            st.download_button(
+if summary_path.exists():
+    with summary_path.open("r", encoding="utf-8") as file:
+        summary = json.load(file)
+
+    st.subheader("Grounding Evaluation Results")
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    col1.metric("Test cases", summary["dataset_size"])
+    col2.metric("Correct", summary["correct_predictions"])
+    col3.metric("Incorrect", summary["incorrect_predictions"])
+    col4.metric(
+        "Accuracy",
+        f'{summary["grounding_check_accuracy"]:.1%}'
+    )
+
+    st.caption(
+        "Rule-based baseline only. This score does not establish "
+        "real-world hallucination detection accuracy."
+    )
+
+    st.download_button(
+        "Download Grounding Summary (JSON)",
+        data=summary_path.read_bytes(),
+        file_name="grounding_evaluation_summary.json",
+        mime="application/json"
+    )
+
                 "Download Grounding Summary (JSON)",
                 data=summary_path.read_bytes(),
                 file_name="grounding_evaluation_summary.json",
