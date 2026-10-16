@@ -259,3 +259,146 @@ if st.button("Run Grounding Evaluation"):
         st.error("Grounding evaluation failed.")
         st.code(result.stderr or result.stdout)
 
+# --------------------------------------------------
+# LLM-as-a-Judge: Product Pulse Grounding Evaluation
+# --------------------------------------------------
+
+st.divider()
+st.header("AI Judge: Report Grounding")
+
+st.write(
+    "Compare a generated product report against its source reviews. "
+    "The judge assesses evidence support, unsupported claims, "
+    "and appropriate uncertainty."
+)
+
+source_reviews = st.text_area(
+    "Source reviews",
+    placeholder="Paste the original review text here...",
+    height=200,
+    key="judge_source_reviews"
+)
+
+generated_report = st.text_area(
+    "Generated product pulse",
+    placeholder="Paste the product pulse or report you want to evaluate...",
+    height=200,
+    key="judge_generated_report"
+)
+
+if st.button("Evaluate Report with AI Judge"):
+    if not api_key:
+        st.error(
+            "Enter your OpenAI API key in the sidebar to use the AI judge."
+        )
+    elif not source_reviews.strip() or not generated_report.strip():
+        st.warning("Please provide both source reviews and a generated report.")
+    else:
+        try:
+            from openai import OpenAI
+
+            client = OpenAI(api_key=api_key)
+
+            judge_prompt = """
+You are a strict evaluator of evidence-grounded product reports.
+
+Compare the generated report ONLY against the supplied source reviews.
+Do not treat a reviewer's allegation as independently verified fact.
+
+Evaluate:
+1. Whether claims are supported by the evidence.
+2. Whether counts, percentages, trends, or prevalence claims are justified.
+3. Whether uncertainty and limitations are stated appropriately.
+4. Whether any material claim appears unsupported or contradicted.
+
+Return valid JSON with this structure:
+{
+  "overall_assessment": "pass, needs_review, or fail",
+  "evidence_support_score": 0,
+  "hallucination_risk": "low, medium, or high",
+  "summary": "brief explanation",
+  "claims": [
+    {
+      "claim": "claim from the report",
+      "verdict": "supported, partially_supported, unsupported, or unverifiable",
+      "evidence": "relevant source evidence or none found",
+      "reason": "why this verdict was assigned"
+    }
+  ],
+  "recommended_revisions": [
+    "specific revision"
+  ]
+}
+
+Scores must be integers from 0 to 100.
+Do not invent source quotations. If evidence is insufficient,
+say so. Assess only claims actually present in the report.
+"""
+
+            with st.spinner("AI judge is reviewing the report..."):
+                response = client.chat.completions.create(
+                    model=model,
+                    temperature=0,
+                    response_format={"type": "json_object"},
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": judge_prompt
+                        },
+                        {
+                            "role": "user",
+                            "content": (
+                                "SOURCE REVIEWS:\n"
+                                + source_reviews
+                                + "\n\nGENERATED REPORT:\n"
+                                + generated_report
+                            )
+                        }
+                    ]
+                )
+
+            judgment = json.loads(
+                response.choices[0].message.content
+            )
+
+            st.subheader("AI Judge Results")
+
+            st.metric(
+                "Evidence support score",
+                f'{judgment.get("evidence_support_score", 0)}/100'
+            )
+
+            st.write(
+                "**Overall assessment:**",
+                judgment.get("overall_assessment", "Not provided")
+            )
+            st.write(
+                "**Hallucination risk:**",
+                judgment.get("hallucination_risk", "Not provided")
+            )
+            st.write(judgment.get("summary", ""))
+
+            st.subheader("Claim-by-claim findings")
+            st.json(judgment.get("claims", []))
+
+            st.subheader("Recommended revisions")
+            for revision in judgment.get("recommended_revisions", []):
+                st.write(f"- {revision}")
+
+            st.download_button(
+                "Download AI Judge Report (JSON)",
+                data=json.dumps(judgment, indent=2),
+                file_name="ai_judge_report.json",
+                mime="application/json",
+                key="download_ai_judge_report"
+            )
+
+            st.caption(
+                "AI judge results are estimates, not ground truth. "
+                "Review important findings manually. API usage may incur charges."
+            )
+
+        except Exception as error:
+            st.error("The AI judge could not complete the evaluation.")
+            st.code(str(error))
+
